@@ -1,0 +1,50 @@
+@startuml
+class Student {
+  - name: string
+  - studentID: string
+  - borrowed_books: List[Book]
+  
+  - set_name(name: string): void
+  + get_name(): string
+  - set_studentID(studentID: string): void
+  + get_studentID(): string
+  - borrow_book(book: Book): void
+  - return_book(book: Book): void
+}
+
+class Book {
+  - title: string
+  - author: string
+  - BookID: string
+  - borrowed_by: Optional[Student]
+  
+  - set_title(title: string) : void
+  + get_title() : string
+  - set_author(author: string) : void
+  + get_author() : string
+  - set_BookID(BookID: string) : void
+  + get_BookID() : string
+  + set_borrowed_by(student: Optional[Student]) : void
+  + get_borrowed_by() : Optional[Student]
+}
+
+class LibraryAdmin {
+  - name: string
+  - employee_id: string
+  - library_books: List[Book]
+  
+  - set_name(name: string) : None
+  + get_name() : string
+  - set_employee_id(employee_id: string) : None
+  + get_employee_id() : string
+  - add_book(book: Book) : void
+  + search_book(bookid: string) : Book
+}
+
+Book "1..*" -- "0..1" Student : is borrowed by
+
+LibraryAdmin "0..5" -- "*" Book : manages
+
+LibraryAdmin "0..5" -- "*" Student : manages
+
+@enduml

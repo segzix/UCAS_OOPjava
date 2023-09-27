@@ -1,0 +1,39 @@
+@startuml
+CarInFactory <|- Car_Driver
+class CarInFactory {
+    -model: string
+    -productionDate: int
+    -Car_ID: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +getEngineID(): int
+    -set_production_date(date: int): void
+    -set_car_ID(car_ID: string): void
+}
+
+class Car_Driver{
+    -model: string
+    -productionDate: int
+    -Car_ID: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +get_car_ID(): int
+    +getWarrantyPeriod(): int
+    -set_production_date(date: int): void
+}
+'Traffic Administration Bureau
+Car_Driver <|- Car
+class Car{
+    Car_ID: int
+    speed_score: int
+    model: string
+    productionDate: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +get_speed_score(): int
+    -setID(car_ID: int): void
+    -setScore(speed_score: int): void
+}

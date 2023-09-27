@@ -1,0 +1,43 @@
+@startuml
+CarInFactory <|- Car_Driver
+class CarInFactory {
+    -string model
+    -productionDate: int
+    -engineID: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +getEngineID(): int
+    -set_production_date(date: int): void
+    -set_car_ID(car_ID: string): void
+}
+
+class Car_Driver{
+    String model
+    int productionDate
+    int engineID
+    int warrantyPeriod
+
+    String getModel()
+    int getProductionDate()
+    int getEngineID()
+    int getWarrantyPeriod()
+    void setProductionDate(int date)
+    int DegreeOfLove;
+    int getDegreeOfLove()
+}
+'Traffic Administration Bureau
+Car_Driver <|- Car_TAB
+class Car_TAB{
+    int ID
+    int scoresRemaining
+    String model
+    int productionDate
+    int engineID
+
+    String getModel()
+    int getProductionDate()
+    int getScoresRemaining()
+    void setID(int ID)
+    void setScoresRemaining(int score)
+}

@@ -1,0 +1,42 @@
+@startuml
+class Car_Factory {
+    -model: string
+    -productionDate: int
+    -Car_ID: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +getEngineID(): int
+    -set_production_date(date: int): void
+    -set_car_ID(car_ID: string): void
+}
+
+class Car_Driver{
+    -model: string
+    -productionDate: int
+    -Car_ID: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +get_car_ID(): int
+    +getWarrantyPeriod(): int
+    -set_production_date(date: int): void
+}
+'Traffic Administration Bureau
+class Car{
+    Car_ID: int
+    speed_score: int
+    model: string
+    productionDate: int
+
+    +getModel(): string
+    +getProductionDate(): int
+    +get_speed_score(): int
+    -setID(car_ID: int): void
+    -setScore(speed_score: int): void
+}
+
+Car_Driver "1" -- "0..*" Car
+
+Car "0..*" -- "1" Car_Factory
+@enduml
