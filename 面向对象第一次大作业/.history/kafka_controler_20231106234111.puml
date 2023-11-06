@@ -1,0 +1,99 @@
+@startuml
+class KafkaController {
+    
+    +startup()
+    +onNewTopicCreation(topics)
+    +onNewPartitionCreations(parts)
+
+    +onBrokerFailure(deadBrokers:Seq[Int])
+    +onBrokerStartup(newBrokersSet:Seq[Int])
+
+}
+
+class SessionExpirationListener{
+    +handleNewSession()
+}
+
+class OfflinePartitionLeaderSelector{
+    +selectLeader(tp:TopicAndPartition,oldLeaderIsr:LeaderAndIsr)
+}
+
+class ReplicaStateMachine{
+    +partitionState:mutable.Map[TopicAndPartition,PartitionState]:val
+
+    +startup()
+    +initializeReplicaState()
+    +handleStateChanges(partitions: Set[TopicAndPartition]):void
+    -handleStateChange(sourceState:String,targetState:String):void
+    
+}
+
+class PartitionStateMachine{
+    +partitionState:mutable.Map[TopicAndPartition,PartitionState]:val
+
+    +startup()
+    +initializeReplicaState()
+    +triggerOnlinePartitionStateChange()
+    +handleStateChanges(partitions: Set[TopicAndPartition])
+
+    -handleStateChange(sourceState:String,targetState:String):void
+}
+
+class TopicDeletionManager{
+    +startReplicaDeletion(replicasToBeDeleted:Set[PartitionAndReplica])
+    ' 开始删除，发送stopreplica请求
+
+    +deleteTopicStopReplicaCallback(resp:AbstractRequestResponse,replica:Int)
+    ' 处理发送StopReplicaResponse后的响应
+    +completeReplicaDeletion(replicas:Set[PartitionAndReplica])
+    ' 完成删除
+}
+
+class PartitionModificationsListener{
+    +handleDataChange(dataPath:String,data:Object)
+}
+
+class TopicChangeListener{
+    +handleDataChange(dataPath:String,data:Object)
+}
+
+class BrokerChangeListener{
+    +handleChildChange(path:String,currentBrokerList:List[String])
+}
+
+class PartitionsReassignedListener{
+    +handleDataChange(dataPath:String,data:Object)
+    +initiateReassignReplicasForTopicPartition()
+}
+
+class ReassignedPartitionsIsrChangeListener{
+    +areReplicasInIsr(topic:String,partition:Int,replicas:Seq[Int])
+    +onPartitionReassignment()
+
+    +handleDataChange(dataPath:String,data:Object)
+}
+
+class ReassignedPartitionsLeaderSelector{
+    +selectLeader()
+}
+
+class DeleteTopicListener
+
+' 控制器网络通道管理器
+class ControllerChannelManager{
+    brokerStateInfo = newHashMap[Int,ControllerBrokerStateInfo]
+
+    -addNewBroker(broker:Broker)
+    -removeExistingBroker(brokerState:ControllerBrokerStateInfo)
+}
+
+' 控制器以批量方式发送请求给代理节点
+class ControllerBrokerRequestBatch{
+    +newBatch()
+    +addLeaderAndIsrRequestForBrokers()
+    +sendRequestsToBrokers(epoch:Int)
+}
+Car_Driver "1" -- "0..*" Car
+
+Car "0..*" -- "1" Car_Factory
+@enduml
