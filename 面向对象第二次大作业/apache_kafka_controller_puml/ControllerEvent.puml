@@ -1,0 +1,79 @@
+@startuml
+class ControllerEvent{
+    +process()
+    -doControlledShutdown()
+}
+
+class ControlledShutdown extends ControllerEvent{
+    +process()
+    -doControlledShutdown()
+}
+
+class LeaderAndIsrResponseReceived extends ControllerEvent{
+    +process()
+}
+
+class TopicDeletionStopReplicaResponseReceived extends ControllerEvent{
+    +process()
+}
+
+class Startup extends ControllerEvent{
+    +process()
+}
+
+class BrokerChange extends ControllerEvent{
+    +process()
+}
+
+class BrokerModifications extends ControllerEvent{
+    +process()
+}
+
+class TopicChange extends ControllerEvent{
+    +process()
+}
+
+class LogDirEventNotification extends ControllerEvent{
+    +process()
+}
+
+class PartitionModifications extends ControllerEvent{
+    +process()
+}
+
+class TopicDeletion extends ControllerEvent{
+    +process()
+}
+
+class PartitionReassignment extends ControllerEvent{
+    +process()
+}
+
+class PartitionReassignmentIsrChange extends ControllerEvent{
+    +process()
+}
+
+class IsrChangeNotification extends ControllerEvent{
+    +process()
+}
+
+class PreferredReplicaLeaderElection extends ControllerEvent{
+    +process()
+}
+
+class ControllerChange extends ControllerEvent{
+    +process()
+}
+
+class Reelect extends ControllerEvent{
+    +process()
+}
+
+class RegisterBrokerAndReelect extends ControllerEvent{
+    +process()
+}
+
+class Expire extends ControllerEvent{
+    +process()
+}
+@enduml

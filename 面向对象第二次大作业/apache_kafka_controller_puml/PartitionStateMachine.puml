@@ -1,0 +1,35 @@
+@startuml
+class PartitionStateMachine{
+    -val controllerId
+
+    +startup()
+    +shutdown()
+
+    -initializePartitionState()
+    +triggerOnlinePartitionStateChange()
+
+    +handleStateChanges(replicas: Seq[PartitionAndReplica], targetState: ReplicaState,
+                         callbacks: Callbacks = new Callbacks())
+    -doHandleStateChanges(replicaId: Int, partitions: Seq[TopicPartition], targetState: ReplicaState,
+                                   callbacks: Callbacks)
+    
+    -initializeLeaderAndIsrForPartitions(partitions: Seq[TopicPartition])
+    -electLeaderForPartitions(partitions: Seq[TopicPartition], partitionLeaderElectionStrategy: PartitionLeaderElectionStrategy)
+    -doElectLeaderForPartitions(partitions: Seq[TopicPartition], partitionLeaderElectionStrategy: PartitionLeaderElectionStrategy)
+
+    -leaderForOffline(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)])
+    -leaderForReassign(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)])
+    -leaderForPreferredReplica(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)])
+    -leaderForControlledShutdown(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)], shuttingDownBrokers: Set[Int])
+
+}
+
+object PartitionLeaderElectionAlgorithms{
+    +offlinePartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int], uncleanLeaderElectionEnabled: Boolean, controllerContext: ControllerContext)
+    +reassignPartitionLeaderElection(reassignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int])
+    +preferredReplicaPartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int])
+    +controlledShutdownPartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int], shuttingDownBrokers: Set[Int])
+}
+
+PartitionLeaderElectionAlgorithms --o PartitionStateMachine
+@enduml

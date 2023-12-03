@@ -1,0 +1,152 @@
+@startuml
+class KafkaController {
+    
+    +startup()
+    +shutdown()
+    +controlledShutdown(id: Int, controlledShutdownCallback: Try[Set[TopicPartition]] => Unit)
+    
+    -onControllerFailover()
+    -onControllerResignation()
+    -onBrokerLogDirFailure()
+
+    -onBrokerStartup()
+    -onBrokerFailure()
+    -onBrokerUpdate()
+
+    -onReplicasBecomeOffline()
+    -onNewPartitionCreation()
+    -onPartitionReassignment()
+    -maybeTriggerPartitionReassignment()
+
+    -fetchPendingPreferredReplicaElections()
+    -onPreferredReplicaElection()
+
+    -incrementControllerEpoch()
+    -initializeControllerContext()
+}
+
+class TopicDeletionManager{
+    +init(initialTopicsToBeDeleted: Set[String], initialTopicsIneligibleForDeletion: Set[String])
+    +reset()
+
+    +tryTopicDeletion()
+    +enqueueTopicsForDeletion(topics: Set[String])
+    +resumeDeletionForTopics(topics: Set[String] = Set.empty)
+    +failReplicaDeletion(replicas: Set[PartitionAndReplica])
+    +completeReplicaDeletion(replicas: Set[PartitionAndReplica])
+
+    -resumeDeletions()
+
+    -completeDeleteTopic(topic: String)
+
+    -onTopicDeletion(topics: Set[String])
+    -onPartitionDeletion(partitionsToBeDeleted: Set[TopicPartition])
+    -startReplicaDeletion(replicasForTopicsToBeDeleted: Set[PartitionAndReplica])
+}
+
+class ZK_broker
+
+class SessionExpirationListener{
+    +handleNewSession()
+}
+
+class OfflinePartitionLeaderSelector{
+    +selectLeader()
+}
+
+class ReplicaStateMachine{
+    +partitionState:mutable.Map[TopicAndPartition,PartitionState]:val
+
+    +startup()
+    +initializeReplicaState()
+    +handleStateChanges():void
+    -handleStateChange():void
+    
+}
+
+class PartitionStateMachine{
+    +partitionState:mutable.Map[TopicAndPartition,PartitionState]:val
+
+    +startup()
+    +initializeReplicaState()
+    +triggerOnlinePartitionStateChange()
+    +handleStateChanges()
+
+    -handleStateChange():void
+}
+
+class TopicDeletionManager{
+    +startReplicaDeletion()
+    ' 开始删除，发送stopreplica请求
+
+    +deleteTopicStopReplicaCallback()
+    ' 处理发送StopReplicaResponse后的响应
+    +completeReplicaDeletion()
+    ' 完成删除
+}
+
+class PartitionModificationsListener{
+    +handleDataChange()
+}
+
+class TopicChangeListener{
+    +handleDataChange()
+}
+
+class BrokerChangeListener{
+    +handleChildChange()
+}
+
+class PartitionsReassignedListener{
+    +handleDataChange()
+    +initiateReassignReplicasForTopicPartition()
+}
+
+class ReassignedPartitionsIsrChangeListener{
+    +areReplicasInIsr()
+    +onPartitionReassignment()
+
+    +handleDataChange()
+}
+
+class ReassignedPartitionsLeaderSelector{
+    +selectLeader()
+}
+
+class DeleteTopicListener
+
+' 控制器网络通道管理器
+class ControllerChannelManager{
+    brokerStateInfo = newHashMap[Int,ControllerBrokerStateInfo]
+
+    -addNewBroker()
+    -removeExistingBroker()
+}
+
+' 控制器以批量方式发送请求给代理节点
+class ControllerBrokerRequestBatch{
+    +newBatch()
+    +addLeaderAndIsrRequestForBrokers()
+    +sendRequestsToBrokers()
+}
+
+PartitionModificationsListener --> ZK_broker
+SessionExpirationListener --> ZK_broker
+TopicChangeListener --> ZK_broker
+BrokerChangeListener --> ZK_broker
+PartitionsReassignedListener --> ZK_broker
+ReassignedPartitionsIsrChangeListener --> ZK_broker
+DeleteTopicListener --> ZK_broker
+
+ZK_broker --> KafkaController
+ReplicaStateMachine --> KafkaController
+PartitionStateMachine --> KafkaController
+
+ControllerBrokerRequestBatch --> ControllerChannelManager
+
+ControllerChannelManager --> KafkaController
+
+ReassignedPartitionsLeaderSelector --> KafkaController
+OfflinePartitionLeaderSelector --> KafkaController
+TopicDeletionManager --> KafkaController
+@enduml

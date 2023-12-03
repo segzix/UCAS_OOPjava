@@ -1,0 +1,22 @@
+@startuml
+class ShutdownableThread{
+    +name: String
+}
+
+class RequestSendThread{
+    -val socketTimeoutMs
+
+    +doWork()
+    -brokerReady()
+    +initiateShutdown()
+}
+
+class ControllerEventThread{
+    +name: String
+
+    +doWork()
+}
+
+RequestSendThread --|> ShutdownableThread
+ControllerEventThread --|> ShutdownableThread
+@enduml

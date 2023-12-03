@@ -1,0 +1,72 @@
+@startuml
+class ZNodeChildChangeHandler{
+    +handleChildChange()
+}
+
+class ZNodeChangeHandler{
+    +handleDataChange()
+    +handleDeletion()
+    +handleCreation()
+}
+
+
+class BrokerChangeHandler {
+    +handleChildChange()
+}
+
+class BrokerModificationsHandler {
+    +handleDataChange()
+}
+
+class TopicChangeHandler {
+    +handleChildChange()
+}
+
+class LogDirEventNotificationHandler {
+    +handleChildChange()
+}
+
+class PartitionModificationsHandler {
+    +handleDataChange()
+}
+
+class TopicDeletionHandler {
+    +handleChildChange()
+}
+
+class PartitionReassignmentHandler { 
+    +handleCreation()
+}
+
+class PartitionReassignmentIsrChangeHandler {
+    +handleDataChange()
+}
+
+class IsrChangeNotificationHandler {
+    +handleChildChange()
+}
+
+class PreferredReplicaElectionHandler {
+    +handleCreation()
+}
+
+class ControllerChangeHandler {
+    +handleCreation()
+    +handleDeletion()
+    +handleDataChange()
+}
+
+
+BrokerChangeHandler --|> ZNodeChildChangeHandler
+BrokerModificationsHandler --|> ZNodeChangeHandler
+opicChangeHandler --|> ZNodeChildChangeHandler
+LogDirEventNotificationHandler --|> ZNodeChildChangeHandler
+PartitionModificationsHandler --|> ZNodeChangeHandler
+TopicDeletionHandler --|> ZNodeChildChangeHandler
+PartitionReassignmentHandler --|> ZNodeChangeHandler
+PartitionReassignmentIsrChangeHandler --|> ZNodeChangeHandler
+IsrChangeNotificationHandler --|> ZNodeChildChangeHandler
+PreferredReplicaElectionHandler --|> ZNodeChangeHandler
+ControllerChangeHandler --|> ZNodeChangeHandler
+
+@enduml

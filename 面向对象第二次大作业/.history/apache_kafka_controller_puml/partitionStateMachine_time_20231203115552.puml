@@ -1,0 +1,81 @@
+@startuml
+' actor Actor
+' autonumber
+' startup()-> initializePartitionState(): 调用updateAssignedReplicasForPartition()方法
+' initializePartitionState()-> startup():获取partitionReplicaAssignment变量
+
+' startup()-> triggerOnlinePartitionStateChange()
+' triggerOnlinePartitionStateChange()-> handleStateChanges() 
+
+' handleStateChanges()-> controllerChannelManager: 调用newBatch()方法
+' controllerChannelManager-> handleStateChanges():无返回值
+
+' handleStateChanges()-> doHandleStateChanges()
+
+' doHandleStateChanges()-> initializeLeaderAndIsrForPartitions()
+' initializeLeaderAndIsrForPartitions()-> controllerChannelManager: 调用addLeaderAndIsrRequestForBrokers()方法
+' controllerChannelManager-> initializeLeaderAndIsrForPartitions(): 无返回值
+' initializeLeaderAndIsrForPartitions()-> doHandleStateChanges()
+
+' doHandleStateChanges()-> electLeaderForPartitions()
+' electLeaderForPartitions()-> doElectLeaderForPartitions()
+
+' doElectLeaderForPartitions()-> leaderForOffline()
+' leaderForOffline()-> doElectLeaderForPartitions()
+' doElectLeaderForPartitions()-> leaderForReassign()
+' leaderForReassign()-> doElectLeaderForPartitions()
+' doElectLeaderForPartitions()-> leaderForPreferredReplica() 
+' leaderForPreferredReplica()-> doElectLeaderForPartitions()
+' doElectLeaderForPartitions()-> leaderForControlledShutdown()
+' leaderForControlledShutdown()-> doElectLeaderForPartitions() 
+
+' doElectLeaderForPartitions()-> electLeaderForPartitions() 
+' electLeaderForPartitions()-> doHandleStateChanges()
+
+' dohandleStateChanges()-> HandleStateChanges()
+
+' handleStateChanges()-> controllerChannelManager: 调用sendRequestsToBrokers()方法
+' controllerChannelManager-> handleStateChanges():无返回值
+
+' triggerOnlinePartitionStateChange()-> startup()
+' handleStateChanges()-> triggerOnlinePartitionStateChange() 
+startup-> initializePartitionState:
+initializePartitionState-> startup:
+
+startup-> triggerOnlinePartitionStateChange
+triggerOnlinePartitionStateChange-> handleStateChanges 
+
+handleStateChanges-> controllerChannelManager: 调用newBatch方法
+controllerChannelManager-> handleStateChanges:无返回值
+
+handleStateChanges-> doHandleStateChanges
+
+doHandleStateChanges-> initializeLeaderAndIsrForPartitions
+initializeLeaderAndIsrForPartitions-> controllerChannelManager: 调用addLeaderAndIsrRequestForBrokers方法
+controllerChannelManager-> initializeLeaderAndIsrForPartitions: 无返回值
+initializeLeaderAndIsrForPartitions-> doHandleStateChanges
+
+doHandleStateChanges-> electLeaderForPartitions
+electLeaderForPartitions-> doElectLeaderForPartitions
+
+doElectLeaderForPartitions-> leaderForOffline
+leaderForOffline-> doElectLeaderForPartitions
+doElectLeaderForPartitions-> leaderForReassign
+leaderForReassign-> doElectLeaderForPartitions
+doElectLeaderForPartitions-> leaderForPreferredReplica 
+leaderForPreferredReplica-> doElectLeaderForPartitions
+doElectLeaderForPartitions-> leaderForControlledShutdown
+leaderForControlledShutdown-> doElectLeaderForPartitions 
+
+doElectLeaderForPartitions-> electLeaderForPartitions 
+electLeaderForPartitions-> doHandleStateChanges
+
+dohandleStateChanges-> HandleStateChanges
+
+handleStateChanges-> controllerChannelManager: 调用sendRequestsToBrokers方法
+controllerChannelManager-> handleStateChanges:无返回值
+
+triggerOnlinePartitionStateChange-> startup
+handleStateChanges-> triggerOnlinePartitionStateChange 
+
+@enduml

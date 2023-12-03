@@ -1,0 +1,412 @@
+@startuml
+class ShutdownableThread{
+    +name: String
+}
+
+class KafkaController {
+    
+    +startup()
+    +shutdown()
+    +controlledShutdown(id: Int, controlledShutdownCallback: Try[Set[TopicPartition]] => Unit)
+
+    -onControllerFailover()
+    -incrementControllerEpoch()
+    -readControllerEpochFromZooKeeper()
+    -fetchTopicDeletionsInProgress()
+
+    -onControllerResignation()
+    -onBrokerLogDirFailure()
+
+    -onBrokerStartup()
+    -onBrokerFailure()
+    -onBrokerUpdate()
+
+    -onReplicasBecomeOffline()
+    -onNewPartitionCreation()
+    -onPartitionReassignment()
+    -maybeTriggerPartitionReassignment()
+
+    -fetchPendingPreferredReplicaElections()
+    -onPreferredReplicaElection()
+
+    -removePartitionsFromPreferredReplicaElection(partitionsToBeRemoved: Set[TopicPartition],
+    -moveReassignedPartitionLeaderIfRequired(topicPartition: TopicPartition,
+                                                      reassignedPartitionContext: ReassignedPartitionsContext)
+    -stopOldReplicasOfReassignedPartition(topicPartition: TopicPartition,
+                                                   reassignedPartitionContext: ReassignedPartitionsContext,
+                                                   oldReplicas: Set[Int])
+    -updateAssignedReplicasForPartition(partition: TopicPartition,
+                                                 replicas: Seq[Int])
+    -startNewReplicasForReassignedPartition(topicPartition: TopicPartition,
+                                                     reassignedPartitionContext: ReassignedPartitionsContext,
+                                                     newReplicas: Set[Int])
+    -updateLeaderEpochAndSendRequest(partition: TopicPartition, replicasToReceiveRequest: Seq[Int], newAssignedReplicas: Seq[Int])
+                                                    isTriggeredByAutoRebalance : Boolean)
+    -removePartitionFromReassignedPartitions(topicPartition: TopicPartition)
+
+    -removePartitionsFromPreferredReplicaElection(partitionsToBeRemoved: Set[TopicPartition],
+                                                   isTriggeredByAutoRebalance : Boolean)
+    -sendRequest(brokerId: Int, apiKey: ApiKeys, request: AbstractRequest.Builder[_ <: AbstractRequest],
+                                      callback: AbstractResponse => Unit = null)
+    -sendUpdateMetadataRequest(brokers: Seq[Int], partitions: Set[TopicPartition] = Set.empty[TopicPartition])
+
+    -initializeControllerContext()
+    -initializePartitionReassignment()
+    -startChannelManager()
+    -updateLeaderAndIsrCache(partitions: Seq[TopicPartition] = controllerContext.partitionReplicaAssignment.keys.toSeq)
+
+    -resetControllerContext()
+
+
+
+    -checkAndTriggerAutoLeaderRebalance()
+
+}
+
+class TopicDeletionManager{
+    +init(initialTopicsToBeDeleted: Set[String], initialTopicsIneligibleForDeletion: Set[String])
+    +reset()
+
+    +tryTopicDeletion()
+    +enqueueTopicsForDeletion(topics: Set[String])
+    +resumeDeletionForTopics(topics: Set[String] = Set.empty)
+    +failReplicaDeletion(replicas: Set[PartitionAndReplica])
+    +completeReplicaDeletion(replicas: Set[PartitionAndReplica])
+
+    -resumeDeletions()
+
+    -completeDeleteTopic(topic: String)
+
+    -onTopicDeletion(topics: Set[String])
+    -onPartitionDeletion(partitionsToBeDeleted: Set[TopicPartition])
+    -startReplicaDeletion(replicasForTopicsToBeDeleted: Set[PartitionAndReplica])
+}
+
+class ReplicaStateMachine{
+    -val controllerId
+
+    +startup()
+    +shutdown()
+
+    -initializeReplicaState()
+    +handleStateChanges(replicas: Seq[PartitionAndReplica], targetState: ReplicaState,
+                         callbacks: Callbacks = new Callbacks())
+    -doHandleStateChanges(replicaId: Int, partitions: Seq[TopicPartition], targetState: ReplicaState,
+                                   callbacks: Callbacks)
+    -removeReplicasFromIsr(replicaId: Int, partitions: Seq[TopicPartition])
+    -doRemoveReplicasFromIsr(replicaId: Int, partitions: Seq[TopicPartition])
+    -getTopicPartitionStatesFromZk(partitions: Seq[TopicPartition])
+}
+
+' class ZK_broker
+
+' class SessionExpirationListener{
+'     +handleNewSession()
+' }
+
+' class OfflinePartitionLeaderSelector{
+'     +selectLeader()
+' }
+
+class PartitionStateMachine{
+    -val controllerId
+
+    +startup()
+    +shutdown()
+
+    -initializePartitionState()
+    +triggerOnlinePartitionStateChange()
+
+    +handleStateChanges(replicas: Seq[PartitionAndReplica], targetState: ReplicaState,
+                         callbacks: Callbacks = new Callbacks())
+    -doHandleStateChanges(replicaId: Int, partitions: Seq[TopicPartition], targetState: ReplicaState,
+                                   callbacks: Callbacks)
+    
+    -initializeLeaderAndIsrForPartitions(partitions: Seq[TopicPartition])
+    -electLeaderForPartitions(partitions: Seq[TopicPartition], partitionLeaderElectionStrategy: PartitionLeaderElectionStrategy)
+    -doElectLeaderForPartitions(partitions: Seq[TopicPartition], partitionLeaderElectionStrategy: PartitionLeaderElectionStrategy)
+
+    -leaderForOffline(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)])
+    -leaderForReassign(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)])
+    -leaderForPreferredReplica(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)])
+    -leaderForControlledShutdown(leaderIsrAndControllerEpochs: Seq[(TopicPartition, LeaderIsrAndControllerEpoch)], shuttingDownBrokers: Set[Int])
+
+}
+
+class ControllerChannelManager{
+    -val brokerStateInfo
+    -val brokerLock
+
+    +startup()
+    +shutdown()
+    +sendRequest(brokerId: Int, apiKey: ApiKeys, request: AbstractRequest.Builder[_ <: AbstractRequest],
+                  callback: AbstractResponse => Unit = null)
+    
+    +addBroker(broker: Broker)
+    +removeBroker(brokerId: Int)
+
+    -removeExistingBroker(brokerState: ControllerBrokerStateInfo)
+    -startRequestSendThread(brokerId: Int)
+}
+
+
+
+class RequestSendThread{
+    -val socketTimeoutMs
+
+    +doWork()
+    -brokerReady()
+    +initiateShutdown()
+}
+
+class ControllerBrokerRequestBatch{
+    +val controllerContext
+    +val controllerId
+    +val leaderAndIsrRequestMap
+    +val stopReplicaRequestMap
+    +val updateMetadataRequestBrokerSet
+    +val updateMetadataRequestPartitionInfoMap
+
+    +newBatch()
+    +clear()
+
+    +addLeaderAndIsrRequestForBrokers(brokerIds: Seq[Int], topicPartition: TopicPartition,
+                                       leaderIsrAndControllerEpoch: LeaderIsrAndControllerEpoch,
+                                       replicas: Seq[Int], isNew: Boolean)
+    +addStopReplicaRequestForBrokers(brokerIds: Seq[Int], topicPartition: TopicPartition, deletePartition: Boolean,
+                                      callback: (AbstractResponse, Int) => Unit)
+    +addUpdateMetadataRequestForBrokers(brokerIds: Seq[Int],
+                                         partitions: collection.Set[TopicPartition])
+    
+    +sendRequestsToBrokers(controllerEpoch: Int)
+}
+
+object PartitionLeaderElectionAlgorithms{
+    +offlinePartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int], uncleanLeaderElectionEnabled: Boolean, controllerContext: ControllerContext)
+    +reassignPartitionLeaderElection(reassignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int])
+    +preferredReplicaPartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int])
+    +controlledShutdownPartitionLeaderElection(assignment: Seq[Int], isr: Seq[Int], liveReplicas: Set[Int], shuttingDownBrokers: Set[Int])
+}
+
+class ControllerContext{
+    +val stats
+    +var controllerChannelManager
+    +var shuttingDownBrokerIds
+    +var epoch
+    +var epochZkVersion
+    +var allTopics
+    +var partitionReplicaAssignment
+    +var partitionLeadershipInfo
+    +val partitionsBeingReassigned
+    +val replicasOnOfflineDirs
+
+    -var liveBrokersUnderlying
+    -var liveBrokerIdsUnderlying
+
+    +partitionsOnBroker(brokerId: Int)
+    +isReplicaOnline(brokerId: Int, topicPartition: TopicPartition, includeShuttingDownBrokers: Boolean = false)
+    +replicasOnBrokers(brokerIds: Set[Int])
+    +replicasForTopic(topic: String)
+    +allLiveReplicas()
+    +replicasForPartition(partitions: collection.Set[TopicPartition])
+    +removeTopic(topic: String)
+}
+
+class ControllerEventManager{
+    +start()
+    +close()
+
+    +put(event: ControllerEvent)
+    +clearAndPut(event: ControllerEvent)
+
+}
+
+class ControllerEventThread{
+    +name: String
+
+    +doWork()
+}
+
+class ControllerEvent{
+    +process()
+    -doControlledShutdown()
+}
+
+class ControlledShutdown extends ControllerEvent{
+    +process()
+    -doControlledShutdown()
+}
+
+class LeaderAndIsrResponseReceived extends ControllerEvent{
+    +process()
+}
+
+class TopicDeletionStopReplicaResponseReceived extends ControllerEvent{
+    +process()
+}
+
+class Startup extends ControllerEvent{
+    +process()
+}
+
+class BrokerChange extends ControllerEvent{
+    +process()
+}
+
+class BrokerModifications extends ControllerEvent{
+    +process()
+}
+
+class TopicChange extends ControllerEvent{
+    +process()
+}
+
+class LogDirEventNotification extends ControllerEvent{
+    +process()
+}
+
+class PartitionModifications extends ControllerEvent{
+    +process()
+}
+
+class TopicDeletion extends ControllerEvent{
+    +process()
+}
+
+class PartitionReassignment extends ControllerEvent{
+    +process()
+}
+
+class PartitionReassignmentIsrChange extends ControllerEvent{
+    +process()
+}
+
+class IsrChangeNotification extends ControllerEvent{
+    +process()
+}
+
+class PreferredReplicaLeaderElection extends ControllerEvent{
+    +process()
+}
+
+class ControllerChange extends ControllerEvent{
+    +process()
+}
+
+class Reelect extends ControllerEvent{
+    +process()
+}
+
+class RegisterBrokerAndReelect extends ControllerEvent{
+    +process()
+}
+
+class Expire extends ControllerEvent{
+    +process()
+}
+
+
+class ZNodeChildChangeHandler{
+    +handleChildChange()
+}
+
+class ZNodeChangeHandler{
+    +handleDataChange()
+    +handleDeletion()
+    +handleCreation()
+}
+
+
+class BrokerChangeHandler {
+    +handleChildChange()
+}
+
+class BrokerModificationsHandler {
+    +handleDataChange()
+}
+
+class TopicChangeHandler {
+    +handleChildChange()
+}
+
+class LogDirEventNotificationHandler {
+    +handleChildChange()
+}
+
+class PartitionModificationsHandler {
+    +handleDataChange()
+}
+
+class TopicDeletionHandler {
+    +handleChildChange()
+}
+
+class PartitionReassignmentHandler { 
+    +handleCreation()
+}
+
+class PartitionReassignmentIsrChangeHandler {
+    +handleDataChange()
+}
+
+class IsrChangeNotificationHandler {
+    +handleChildChange()
+}
+
+class PreferredReplicaElectionHandler {
+    +handleCreation()
+}
+
+class ControllerChangeHandler {
+    +handleCreation()
+    +handleDeletion()
+    +handleDataChange()
+}
+
+
+BrokerChangeHandler --|> ZNodeChildChangeHandler
+BrokerModificationsHandler --|> ZNodeChangeHandler
+opicChangeHandler --|> ZNodeChildChangeHandler
+LogDirEventNotificationHandler --|> ZNodeChildChangeHandler
+PartitionModificationsHandler --|> ZNodeChangeHandler
+TopicDeletionHandler --|> ZNodeChildChangeHandler
+PartitionReassignmentHandler --|> ZNodeChangeHandler
+PartitionReassignmentIsrChangeHandler --|> ZNodeChangeHandler
+IsrChangeNotificationHandler --|> ZNodeChildChangeHandler
+PreferredReplicaElectionHandler --|> ZNodeChangeHandler
+ControllerChangeHandler --|> ZNodeChangeHandler
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PartitionModificationsListener --> ZK_broker
+SessionExpirationListener --> ZK_broker
+TopicChangeListener --> ZK_broker
+BrokerChangeListener --> ZK_broker
+PartitionsReassignedListener --> ZK_broker
+ReassignedPartitionsIsrChangeListener --> ZK_broker
+DeleteTopicListener --> ZK_broker
+
+ZK_broker --> KafkaController
+ReplicaStateMachine --> KafkaController
+PartitionStateMachine --> KafkaController
+
+ControllerBrokerRequestBatch --> ControllerChannelManager
+
+ControllerChannelManager --> KafkaController
+
+ReassignedPartitionsLeaderSelector --> KafkaController
+OfflinePartitionLeaderSelector --> KafkaController
+TopicDeletionManager --> KafkaController
+@enduml
