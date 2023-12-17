@@ -1,0 +1,15 @@
+@startuml
+
+' actor Actor
+' autonumber
+Actor->Client:调用work()方法
+Client-> Server: 调用open()方法
+Server--> Client: 方法返回，无返回值
+Client-> Server:调用print()方法
+Server->Device:调用write()方法
+Device-->Server:方法返回，无返回值
+Client->Server:调用close()方法
+Server-->Client:方法返回，无返回值
+Client-->Actor:程序执行完毕
+
+@enduml

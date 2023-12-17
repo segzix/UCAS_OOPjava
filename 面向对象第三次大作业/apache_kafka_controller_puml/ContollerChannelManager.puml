@@ -1,0 +1,41 @@
+@startuml
+class ControllerChannelManager{
+    -val brokerStateInfo
+    -val brokerLock
+
+    +startup()
+    +shutdown()
+    +sendRequest(brokerId: Int, apiKey: ApiKeys, request: AbstractRequest.Builder[_ <: AbstractRequest],
+                  callback: AbstractResponse => Unit = null)
+    
+    +addBroker(broker: Broker)
+    +removeBroker(brokerId: Int)
+
+    -removeExistingBroker(brokerState: ControllerBrokerStateInfo)
+    -startRequestSendThread(brokerId: Int)
+}
+
+class ControllerBrokerRequestBatch{
+    +val controllerContext
+    +val controllerId
+    +val leaderAndIsrRequestMap
+    +val stopReplicaRequestMap
+    +val updateMetadataRequestBrokerSet
+    +val updateMetadataRequestPartitionInfoMap
+
+    +newBatch()
+    +clear()
+
+    +addLeaderAndIsrRequestForBrokers(brokerIds: Seq[Int], topicPartition: TopicPartition,
+                                       leaderIsrAndControllerEpoch: LeaderIsrAndControllerEpoch,
+                                       replicas: Seq[Int], isNew: Boolean)
+    +addStopReplicaRequestForBrokers(brokerIds: Seq[Int], topicPartition: TopicPartition, deletePartition: Boolean,
+                                      callback: (AbstractResponse, Int) => Unit)
+    +addUpdateMetadataRequestForBrokers(brokerIds: Seq[Int],
+                                         partitions: collection.Set[TopicPartition])
+    
+    +sendRequestsToBrokers(controllerEpoch: Int)
+}
+
+ControllerBrokerRequestBatch --o ControllerChannelManager
+@enduml
