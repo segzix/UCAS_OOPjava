@@ -1,0 +1,59 @@
+@startuml
+activate startup
+activate initializePartitionState
+startup-> initializePartitionState:
+initializePartitionState--> startup:
+deactivate initializePartitionState
+
+activate triggerOnlinePartitionStateChange
+startup-> triggerOnlinePartitionStateChange
+triggerOnlinePartitionStateChange-> handleStateChanges 
+
+handleStateChanges-> controllerChannelManager: 调用newBatch方法
+controllerChannelManager--> handleStateChanges:无返回值
+
+handleStateChanges-> doHandleStateChanges
+
+opt uninitializedPartitions.nonEmpty
+doHandleStateChanges-> initializeLeaderAndIsrForPartitions
+initializeLeaderAndIsrForPartitions-> controllerChannelManager: 调用addLeaderAndIsrRequestForBrokers方法
+controllerChannelManager-> initializeLeaderAndIsrForPartitions: 无返回值
+initializeLeaderAndIsrForPartitions-> doHandleStateChanges
+end
+
+opt partitionsToElectLeader.nonEmpty
+doHandleStateChanges-> electLeaderForPartitions
+electLeaderForPartitions-> doElectLeaderForPartitions
+
+opt partitionLeaderElectionStrategy match OfflinePartitionLeaderElectionStrategy
+doElectLeaderForPartitions-> leaderForOffline
+leaderForOffline-> doElectLeaderForPartitions
+end
+opt partitionLeaderElectionStrategy match ReassignPartitionLeaderElectionStrategy
+doElectLeaderForPartitions-> leaderForReassign
+leaderForReassign-> doElectLeaderForPartitions
+end
+opt partitionLeaderElectionStrategy match PreferredReplicaPartitionLeaderElectionStrategy
+doElectLeaderForPartitions-> leaderForPreferredReplica 
+leaderForPreferredReplica-> doElectLeaderForPartitions
+end
+opt partitionLeaderElectionStrategy match ControlledShutdownPartitionLeaderElectionStrategy
+doElectLeaderForPartitions-> leaderForControlledShutdown
+leaderForControlledShutdown-> doElectLeaderForPartitions 
+end
+
+doElectLeaderForPartitions-> electLeaderForPartitions 
+electLeaderForPartitions-> doHandleStateChanges
+end
+
+doHandleStateChanges-> handleStateChanges
+
+handleStateChanges-> controllerChannelManager: 调用sendRequestsToBrokers方法
+controllerChannelManager-> handleStateChanges:无返回值
+
+handleStateChanges-> triggerOnlinePartitionStateChange 
+triggerOnlinePartitionStateChange-> startup
+deactivate triggerOnlinePartitionStateChange
+deactivate startup
+
+@enduml

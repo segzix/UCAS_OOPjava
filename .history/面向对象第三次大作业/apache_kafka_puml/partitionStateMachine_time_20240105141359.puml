@@ -1,0 +1,87 @@
+@startuml
+activate startup
+activate initializePartitionState
+startup-> initializePartitionState:
+initializePartitionState--> startup:
+deactivate initializePartitionState
+
+activate triggerOnlinePartitionStateChange
+startup-> triggerOnlinePartitionStateChange
+triggerOnlinePartitionStateChange-> handleStateChanges 
+
+activate handleStateChanges
+handleStateChanges-> controllerChannelManager: 调用newBatch方法
+controllerChannelManager--> handleStateChanges:无返回值
+
+activate doHandleStateChanges
+handleStateChanges-> doHandleStateChanges
+
+opt uninitializedPartitions.nonEmpty
+activate initializeLeaderAndIsrForPartitions
+doHandleStateChanges-> initializeLeaderAndIsrForPartitions
+activate controllerChannelManager
+initializeLeaderAndIsrForPartitions-> controllerChannelManager: 调用addLeaderAndIsrRequestForBrokers方法
+controllerChannelManager--> initializeLeaderAndIsrForPartitions: 无返回值
+deactivate controllerChannelManager
+initializeLeaderAndIsrForPartitions--> doHandleStateChanges
+deactivate initializeLeaderAndIsrForPartitions
+end
+deactivate doHandleStateChanges
+
+opt partitionsToElectLeader.nonEmpty
+activate doHandleStateChanges
+activate electLeaderForPartitions
+doHandleStateChanges-> electLeaderForPartitions
+electLeaderForPartitions-> doElectLeaderForPartitions
+
+opt partitionLeaderElectionStrategy match OfflinePartitionLeaderElectionStrategy
+activate doElectLeaderForPartitions
+activate leaderForOffline
+doElectLeaderForPartitions-> leaderForOffline
+leaderForOffline--> doElectLeaderForPartitions
+deactivate doElectLeaderForPartitions
+deactivate leaderForOffline
+end
+opt partitionLeaderElectionStrategy match ReassignPartitionLeaderElectionStrategy
+activate doElectLeaderForPartitions
+activate leaderForReassign
+doElectLeaderForPartitions-> leaderForReassign
+leaderForReassign--> doElectLeaderForPartitions
+deactivate doElectLeaderForPartitions
+deactivate leaderForReassign
+end
+opt partitionLeaderElectionStrategy match PreferredReplicaPartitionLeaderElectionStrategy
+activate doElectLeaderForPartitions
+activate leaderForPreferredReplica 
+doElectLeaderForPartitions-> leaderForPreferredReplica 
+leaderForPreferredReplica--> doElectLeaderForPartitions
+deactivate doElectLeaderForPartitions
+deactivate leaderForPreferredReplica 
+end
+opt partitionLeaderElectionStrategy match ControlledShutdownPartitionLeaderElectionStrategy
+activate doElectLeaderForPartitions
+activate leaderForControlledShutdown
+doElectLeaderForPartitions-> leaderForControlledShutdown
+leaderForControlledShutdown--> doElectLeaderForPartitions 
+deactivate doElectLeaderForPartitions
+deactivate leaderForControlledShutdown
+end
+
+doElectLeaderForPartitions--> electLeaderForPartitions 
+electLeaderForPartitions--> doHandleStateChanges
+deactivate electLeaderForPartitions
+end
+
+doHandleStateChanges--> handleStateChanges
+deactivate doHandleStateChanges
+
+handleStateChanges-> controllerChannelManager: 调用sendRequestsToBrokers方法
+controllerChannelManager--> handleStateChanges:无返回值
+deactivate handleStateChanges
+
+handleStateChanges--> triggerOnlinePartitionStateChange 
+triggerOnlinePartitionStateChange--> startup
+deactivate triggerOnlinePartitionStateChange
+deactivate startup
+
+@enduml

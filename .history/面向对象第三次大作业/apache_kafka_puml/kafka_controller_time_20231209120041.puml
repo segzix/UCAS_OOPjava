@@ -1,0 +1,58 @@
+@startuml
+
+' actor Actor
+' autonumber
+alt !areReplicasInIsr(topicPartition, reassignedReplicas)
+kafka_controller-> kafka_controller: 调用updateAssignedReplicasForPartition()方法
+kafka_controller-> controllerContext:获取partitionReplicaAssignment变量
+controllerContext-> kafka_controller:返回partitionReplicaAssignment变量
+
+kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+kafka_controller-> controllerChannelManager: 调用sendRequestsToBrokers()方法
+controllerChannelManager-> controllerContext:获取liveOrShuttingDownBrokers变量
+controllerContext-> controllerChannelManager:返回liveOrShuttingDownBrokers变量
+controllerChannelManager-> kafka_controller: 无返回值
+
+kafka_controller-> kafka_controller: 调用startNewReplicasForReassignedPartition()方法
+kafka_controller-> replicaStateMachine: 调用handleStateChanges()方法
+replicaStateMachine-> replicaStateMachine: 调用dohandleStateChanges()方法
+replicaStateMachine-> kafka_controller: 无返回值
+else else
+
+kafka_controller-> kafka_controller: 调用moveReassignedPartitionLeaderIfRequired()方法
+kafka_controller-> partitionStateMachine: 调用handleStateChanges()方法
+partitionStateMachine-> partitionStateMachine: 调用dohandleStateChanges()方法
+partitionStateMachine-> kafka_controller: 无返回值
+
+kafka_controller-> kafka_controller: 调用stopOldReplicasOfReassignedPartition()方法
+kafka_controller-> replicaStateMachine: 调用handleStateChanges()方法
+replicaStateMachine-> replicaStateMachine: 调用dohandleStateChanges()方法
+replicaStateMachine-> kafka_controller: 无返回值
+
+kafka_controller-> kafka_controller: 调用updateAssignedReplicasForPartition()方法
+kafka_controller-> partitionStateMachine: 调用handleStateChanges()方法
+partitionStateMachine-> partitionStateMachine: 调用dohandleStateChanges()方法
+partitionStateMachine-> kafka_controller: 无返回值
+
+kafka_controller-> kafka_controller: 调用sendUpdateMetadataRequest()方法
+kafka_controller-> controllerChannelManager: 调用addUpdateMetadataRequestForBrokers()，sendRequestsToBrokers()方法
+controllerChannelManager-> kafka_controller: 无返回值
+
+kafka_controller-> topicDeletionManager: 调用resumeDeletionForTopics()方法
+topicDeletionManager-> kafka_controller: 无返回值
+
+end
+
+' kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+' kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+' kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+' kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+' kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+' kafka_controller-> kafka_controller: 调用updateLeaderEpochAndSendRequest()方法
+' Server->Device:调用write()方法
+' Device-->Server:方法返回，无返回值
+' Client->Server:调用close()方法
+' Server-->Client:方法返回，无返回值
+' Client-->Actor:程序执行完毕
+
+@enduml
