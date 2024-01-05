@@ -49,7 +49,7 @@ handleStateChanges()首先调用BrokerRequestBatch(ControllerChannelManager中�
 
 handleStateChanges()时序图如下：
 
-![1701596966770](image/partitionStateMachine/1701596966770.png)
+![1704437142366](image/partitionStateMachine/1704437142366.png)
 
 #### doHandleStateChanges()
 

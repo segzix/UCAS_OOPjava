@@ -1,45 +1,6 @@
 @startuml
-' actor Actor
-' autonumber
-' startup()-> initializePartitionState(): 调用updateAssignedReplicasForPartition()方法
-' initializePartitionState()-> startup():获取partitionReplicaAssignment变量
-
-' startup()-> triggerOnlinePartitionStateChange()
-' triggerOnlinePartitionStateChange()-> handleStateChanges() 
-
-' handleStateChanges()-> controllerChannelManager: 调用newBatch()方法
-' controllerChannelManager-> handleStateChanges():无返回值
-
-' handleStateChanges()-> doHandleStateChanges()
-
-' doHandleStateChanges()-> initializeLeaderAndIsrForPartitions()
-' initializeLeaderAndIsrForPartitions()-> controllerChannelManager: 调用addLeaderAndIsrRequestForBrokers()方法
-' controllerChannelManager-> initializeLeaderAndIsrForPartitions(): 无返回值
-' initializeLeaderAndIsrForPartitions()-> doHandleStateChanges()
-
-' doHandleStateChanges()-> electLeaderForPartitions()
-' electLeaderForPartitions()-> doElectLeaderForPartitions()
-
-' doElectLeaderForPartitions()-> leaderForOffline()
-' leaderForOffline()-> doElectLeaderForPartitions()
-' doElectLeaderForPartitions()-> leaderForReassign()
-' leaderForReassign()-> doElectLeaderForPartitions()
-' doElectLeaderForPartitions()-> leaderForPreferredReplica() 
-' leaderForPreferredReplica()-> doElectLeaderForPartitions()
-' doElectLeaderForPartitions()-> leaderForControlledShutdown()
-' leaderForControlledShutdown()-> doElectLeaderForPartitions() 
-
-' doElectLeaderForPartitions()-> electLeaderForPartitions() 
-' electLeaderForPartitions()-> doHandleStateChanges()
-
-' dohandleStateChanges()-> HandleStateChanges()
-
-' handleStateChanges()-> controllerChannelManager: 调用sendRequestsToBrokers()方法
-' controllerChannelManager-> handleStateChanges():无返回值
-
-' triggerOnlinePartitionStateChange()-> startup()
-' handleStateChanges()-> triggerOnlinePartitionStateChange() 
 tryTopicDeletion-> resumeDeletions
+activate resumeDeletions
 enqueueTopicsForDeletion-> resumeDeletions
 
 resumeDeletionForTopics-> resumeDeletions
@@ -47,34 +8,53 @@ failReplicaDeletion-> resumeDeletions
 
 alt controller.replicaStateMachine.areAllReplicasForTopicDeleted(topic)
 resumeDeletions-> completeDeleteTopic
-completeDeleteTopic-> resumeDeletions
+activate completeDeleteTopic
+completeDeleteTopic--> resumeDeletions
+deactivate completeDeleteTopic
 else else
 alt controller.replicaStateMachine.isAtLeastOneReplicaInDeletionStartedState(topic)
 resumeDeletions -> replicaStateMachine: 调用replicasInState()方法
-replicaStateMachine-> resumeDeletions: 无返回值
+activate replicaStateMachine
+replicaStateMachine--> resumeDeletions: 无返回值
+deactivate replicaStateMachine
 else else
 resumeDeletions-> markTopicForDeletionRetry
-markTopicForDeletionRetry-> resumeDeletions
+activate markTopicForDeletionRetry
+markTopicForDeletionRetry--> resumeDeletions
+deactivate markTopicForDeletionRetry
 end
 end
 
 resumeDeletions -> onTopicDeletion
+activate onTopicDeletion
 
 onTopicDeletion -> kafkaController: 调用sendUpdateMetadataRequest()方法
-kafkaController -> onTopicDeletion: 无返回值
+activate kafkaController
+kafkaController --> onTopicDeletion: 无返回值
+deactivate kafkaController
 
 onTopicDeletion -> onPartitionDeletion
+activate onPartitionDeletion
 onPartitionDeletion -> startReplicaDeletion
+activate startReplicaDeletion
 
 startReplicaDeletion -> replicaStateMachine: 调用handleStateChanges()方法
-replicaStateMachine -> startReplicaDeletion: 无返回值
+activate replicaStateMachine
+replicaStateMachine --> startReplicaDeletion: 无返回值
+deactivate replicaStateMachine
 startReplicaDeletion -> markTopicIneligibleForDeletion
-markTopicIneligibleForDeletion -> startReplicaDeletion
+activate markTopicIneligibleForDeletion
+markTopicIneligibleForDeletion --> startReplicaDeletion
+deactivate markTopicIneligibleForDeletion
 
-startReplicaDeletion -> onPartitionDeletion
-onPartitionDeletion -> onTopicDeletion
+startReplicaDeletion --> onPartitionDeletion
+deactivate startReplicaDeletion
+onPartitionDeletion --> onTopicDeletion
+deactivate onPartitionDeletion
 
-onTopicDeletion -> resumeDeletions
+onTopicDeletion --> resumeDeletions
+deactivate onTopicDeletion
+deactivate resumeDeletions
 
 
 ' handleStateChanges-> controllerChannelManager: 调用newBatch方法

@@ -216,7 +216,7 @@ private def onPartitionReassignment(topicPartition: TopicPartition, reassignedPa
 
 关于该函数的调用时序图如下。
 
-![1702094617849](image/kafka_controller/1702094617849.png)
+![1704437057722](image/kafka_controller/1704437057722.png)
 
 kafka_controller中其他的函数，比如resetControllerContext()更新上下文，fetchPendingPreferredReplicaElections()进行副本领导机制选举，在此不过多赘述。kafka_contoller中的方法，最终被contoller_event类的子类所用，即prossess()函数调用kafka_contoller中的函数(主要由由startUp类进行调用)
 

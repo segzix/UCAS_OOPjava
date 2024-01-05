@@ -105,4 +105,4 @@ tryTopicDeletion()，enqueueTopicsForDeletion(topics: Set[String])，resumeDelet
 
 时序图如下：
 
-![1701597239388](image/TopicDeletionManager/1701597239388.png)
+![1704437109914](image/TopicDeletionManager/1704437109914.png)
